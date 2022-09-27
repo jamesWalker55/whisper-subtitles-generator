@@ -18,9 +18,9 @@ def format_timestamp(seconds: float):
     milliseconds -= seconds * 1_000
 
     if hours > 0:
-        return f"{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
-    else:
         return f"{hours}:{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
+    else:
+        return f"{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
 
 
 def create_partial_vtt(segment: dict):
