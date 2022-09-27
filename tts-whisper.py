@@ -37,6 +37,22 @@ def create_vtt(segments: list[dict]):
     return f"WEBVTT\n\n{contents}"
 
 
+def get_boolean_choice(default: bool = False):
+    assert default in (True, False), "Expected default choice to be a boolean"
+
+    choice = None
+
+    while (choice is not True) or (choice is not False):
+        choice = input("  > ").strip().lower()
+        if choice in ("y", "n", ""):
+            if choice == "":
+                return default
+
+            return choice == "y"
+
+        print("    Please input either 'y' or 'n'")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Create subtitles from a file.")
     parser.add_argument(
@@ -75,18 +91,8 @@ def main():
     if args.output.exists() and not args.skip_confirmation:
         print(f"The output path already exists: {args.output.resolve()}")
         print(f"Do you want to overwrite it? (y/N)")
-        want_to_override = None
-        while (want_to_override is not True) or (want_to_override is not False):
-            want_to_override = input("  > ").strip().lower()
-            if want_to_override in ("y", "n", ""):
-                want_to_override = want_to_override == "y"
-                break
 
-            print("    Please input either 'y' or 'n'")
-
-        print()
-
-        if not want_to_override:
+        if not get_boolean_choice():
             sys.exit()
 
     model = whisper.load_model(args.model)
