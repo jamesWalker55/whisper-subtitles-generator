@@ -58,12 +58,14 @@ def main():
     parser.add_argument(
         "input",
         type=Path,
+        nargs="+",
         help="the input file to generate subtitles from",
     )
     parser.add_argument(
         "--output",
         "-o",
         type=Path,
+        action="append",
         help="the path to save the subtitles, defaults to the original path with a `.vtt` extension",
     )
     parser.add_argument(
@@ -81,31 +83,39 @@ def main():
     )
     args = parser.parse_args()
 
+    # input validation
+    if args.output is not None:
+        if len(args.input) != len(args.output):
+            print(f"Please provide exactly {len(args.input)} output paths")
+            sys.exit(1)
+
     if args.output is None:
-        args.output = args.input.with_suffix(".vtt")
+        args.output = [p.with_suffix(".vtt") for p in args.input]
 
     print(f"Generating subtitles from: {args.input}")
     print(f"Subtitles will be saved to: {args.output}")
     print()
 
-    if args.output.exists() and not args.skip_confirmation:
-        print(f"The output path already exists: {args.output.resolve()}")
-        print(f"Do you want to overwrite it? (y/N)")
+    for p in args.output:
+        if p.exists() and not args.skip_confirmation:
+            print(f"The output path already exists: {p.resolve()}")
+            print(f"Do you want to overwrite it? (y/N)")
 
-        if not get_boolean_choice():
-            sys.exit()
+            if not get_boolean_choice():
+                sys.exit()
 
     model = whisper.load_model(args.model)
 
-    result = model.transcribe(
-        str(args.input),
-        verbose=True,
-        language="English",
-    )
+    for x, y in zip(args.input, args.output):
+        result = model.transcribe(
+            str(x),
+            verbose=True,
+            language="English",
+        )
 
-    vtt_contents = create_vtt(result["segments"])
-    with open(str(args.output), "w", encoding="utf8") as f:
-        f.write(vtt_contents)
+        vtt_contents = create_vtt(result["segments"])
+        with open(str(y), "w", encoding="utf8") as f:
+            f.write(vtt_contents)
 
 
 if __name__ == "__main__":
